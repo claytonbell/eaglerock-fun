@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eaglerock-api-deployment
+  namespace: eaglerock
+  labels:
+    app: eaglerock-api
+spec:
+  replicas: 3
+  revisionHistoryLimit: $REPLICA_SET_MAX
+  progressDeadlineSeconds: 90
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      app: eaglerock-api
+  template:
+    metadata:
+      labels:
+        app: eaglerock-api
+    spec:
+      containers:
+      - name: eaglerock-api
+        image: $DEPLOY_IMAGE
+        ports:
+        - name: http
+          containerPort: 5000
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5000
+          periodSeconds: 10
+          timeoutSeconds: 9
+        resources:
+          limits:
+            cpu: 500m
+          requests:
+            cpu: 200m
+      nodeSelector:
+        kubernetes.io/os: linux
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - arm64
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: eaglerock-api-deployment
+  namespace: eaglerock
+spec:
+  maxReplicas: $HPA_MAX_REPLICAS
+  metrics:
+  - resource:
+      name: cpu
+      target:
+        averageUtilization: $HPA_CPU_AVERAGE
+        type: Utilization
+    type: Resource
+  minReplicas: 3
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: eaglerock-api-deployment
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eaglerock-api-service
+  namespace: eaglerock
+  labels:
+    app: eaglerock-api
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "elb"
+    service.beta.kubernetes.io/aws-load-balancer-name: "elb-eaglerock-api"
+    service.beta.kubernetes.io/aws-load-balancer-region: "ap-southeast-2"
+spec:
+  type: LoadBalancer
+  selector:
+    app: eaglerock-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

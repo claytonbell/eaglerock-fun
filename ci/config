@@ -1,0 +1,6 @@
+# TODO: verify this is the id number of the build (I've not used gitlab before)
+BUILD_NUMBER=${CI_JOB_ID:-dev}
+
+# ERC registery for CI use
+IMAGE="555666777111.dkr.ecr.ap-southeast-2.amazonaws.com/eagelrock-api-test:$BUILD_NUMBER"
+

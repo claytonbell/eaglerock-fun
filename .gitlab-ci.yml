@@ -1,0 +1,41 @@
+# WARNING: untested file.  This is a gist
+#
+# I've not used gitlab before.  This YAML file needs verifying
+# I've read docs, created a free account and trialed a little
+
+# TODO figure out how to target build & test to run in the "CI" account
+#      and deploy runs on the relevant agent in the 
+stages:
+  - build
+  - test
+  - deploy
+
+build-job:
+  stage: build
+  script:
+    - ./ci/build.sh
+
+test-job:
+  stage: test
+  script:
+     - ./ci/test.sh
+
+deploy-production-job:
+  stage: deploy
+  environment: staging
+  script:
+    - ./ci/deploy staging
+
+# TODO: how do I ensure that staging complets first with human approval
+
+# TODO: a verify step of the staging canary would be good in here (smoketest, synthetic check, 
+#       SLO check) and then promote the canary to 100%
+
+deploy-production-job:
+  stage: deploy
+  environment: production
+  script:
+    - ./ci/deploy production
+
+# TODO: a verify step of the prod canary would be good in here (smoketest, synthetic check, 
+#       SLO check) and then promote the canary to 100%

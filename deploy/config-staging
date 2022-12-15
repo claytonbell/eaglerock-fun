@@ -1,0 +1,5 @@
+
+DEPLOY_IMAGE="123455555555.dkr.ecr.ap-southeast-2.amazonaws.com/eagelrock-api:$BUILD_NUMBER"
+HPA_MAX_REPLICAS=10
+HPA_CPU_AVERAGE=75
+
